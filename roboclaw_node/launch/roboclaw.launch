@@ -4,6 +4,7 @@
     <arg name="dev" default="/dev/roboclaw"/>
     <arg name="baud" default="115200"/>
     <arg name="address" default="128"/>
+    <arg name="with_encoder" default="True"/>
     <arg name="max_speed" default="1.0"/>
     <arg name="ticks_per_meter" default="8130"/>
     <arg name="base_width" default="0.2"/>
@@ -13,6 +14,7 @@
         <param name="~dev" value="$(arg dev)"/>
         <param name="~baud" value="$(arg baud)"/>
         <param name="~address" value="$(arg address)"/>
+        <param name="~with_encoder" value="$(arg with_encoder)"/>
         <param name="~max_speed" value="$(arg max_speed)"/>
         <param name="~ticks_per_meter" value="$(arg ticks_per_meter)"/>
         <param name="~base_width" value="$(arg base_width)"/>
