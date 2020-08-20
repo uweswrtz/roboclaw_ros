@@ -150,11 +150,12 @@ class Node:
 
         rospy.init_node("roboclaw_node")
         rospy.on_shutdown(self.shutdown)
-        rospy.loginfo("Connecting to roboclaw")
+        
         dev_name = rospy.get_param("~dev", "/dev/ttyACM0")
         baud_rate = int(rospy.get_param("~baud", "115200"))
 
         self.address = int(rospy.get_param("~address", "128"))
+        rospy.loginfo("Connecting to RoboClaw with address {} on port {} and {} baud".format( self.address, dev_name, baud_rate))
         if self.address > 0x87 or self.address < 0x80:
             rospy.logfatal("Address out of range")
             rospy.signal_shutdown("Address out of range")
@@ -194,7 +195,7 @@ class Node:
         if not version[0]:
             rospy.logwarn("Could not get version from roboclaw")
         else:
-            rospy.logdebug(repr(version[1]))
+            rospy.loginfo("Version: {}".format(version[1].rstrip()))
 
         with self.mutex:
             self.roboclaw.SpeedM1M2(self.address, 0, 0)
@@ -224,7 +225,7 @@ class Node:
         while not rospy.is_shutdown():
 
             if (rospy.get_rostime() - self.last_set_speed_time).to_sec() > 1:
-                rospy.loginfo("Did not get command for 1 second, stopping")
+                rospy.logdebug("Did not get command for 1 second, stopping")
                 try:
                     with self.mutex:
                         self.roboclaw.ForwardM1(self.address, 0)
