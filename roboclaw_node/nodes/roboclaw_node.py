@@ -296,13 +296,8 @@ class Node:
                     self.roboclaw.SpeedM1M2(self.address, vr_ticks, vl_ticks)
             else:
                 with self.mutex:
-                    #self.roboclaw.DutyM1M2(self.address, vr_ticks, vl_ticks)
-                    self.roboclaw.ForwardBackwardM1(self.address, vr_ticks)
-                    self.roboclaw.ForwardBackwardM2(self.address, vl_ticks)
+                    self.roboclaw.DutyM1M2(self.address, vr_ticks, vl_ticks)
                     #s = self.roboclaw.ReadError(self.address)[1]
-                    #self.roboclaw.DutyM2(self.address, vl_ticks)
-                    #self.roboclaw.ForwardM1M2(self.address, vr_ticks, vl_ticks)
-                    #self.roboclaw.ForwardBackwardMixed(self.address, vr_ticks)
                 #rospy.loginfo("0x{:x}".format(s))
         except OSError as e:
             rospy.logwarn("SpeedM1M2 OSError: %d", e.errno)
