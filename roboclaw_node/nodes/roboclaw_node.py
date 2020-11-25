@@ -10,6 +10,7 @@ import rospy
 import tf
 from geometry_msgs.msg import Quaternion, Twist
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import BatteryState
 
 __author__ = "bwbazemore@uga.edu (Brad Bazemore)"
 
@@ -154,6 +155,7 @@ class Node:
         self.temp2c = 0.0
         self.current1a = 0.0
         self.current2a = 0.0
+        self.mainbatterystate = BatteryState()
 
         rospy.init_node("roboclaw_node")
         rospy.on_shutdown(self.shutdown)
@@ -215,6 +217,16 @@ class Node:
         self.last_set_speed_time = rospy.get_rostime()
 
         rospy.Subscriber("cmd_vel", Twist, self.cmd_vel_callback)
+
+        self.mainbatterystate_pub = rospy.Publisher('~mainbattery', BatteryState, queue_size=1)
+
+        # setup main battery state
+        self.mainbatterystate.header.frame_id = 'main_battery'
+        self.mainbatterystate.location = 'main battery screw terminal'
+        self.mainbatterystate.power_supply_status = 0 # 2 = DISCHARGING
+        self.mainbatterystate.power_supply_technology = 3 # LIPO
+
+        rospy.Timer(rospy.Duration(1.0), self.publish_batterystate)
 
         rospy.sleep(1)
 
@@ -334,6 +346,22 @@ class Node:
             rospy.logwarn("Diagnostics OSError: %d", e.errno)
             rospy.logdebug(e)
         return stat
+
+    # TODO: better battery health and state
+    def publish_batterystate(self, event):
+        self.mainbatterystate.header.stamp = rospy.Time.now()
+        self.mainbatterystate.voltage = self.mainbattv
+        if (self.mainbattv>=5):
+            self.mainbatterystate.present = True
+        else:
+            self.mainbatterystate.present = False
+       
+        # if (volts<=11.2):
+        #     self.mainbatterystate.power_supply_health = 3
+        # else:
+        #     self.mainbatterystate.power_supply_health = 1
+
+        self.mainbatterystate_pub.publish(self.mainbatterystate)
 
     # TODO: need clean shutdown so motors stop even if new msgs are arriving
     def shutdown(self):
