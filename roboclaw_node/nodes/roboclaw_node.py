@@ -10,6 +10,7 @@ import rospy
 import tf
 from geometry_msgs.msg import Quaternion, Twist
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import BatteryState
 
 __author__ = "bwbazemore@uga.edu (Brad Bazemore)"
 
@@ -147,6 +148,14 @@ class Node:
                        0x800000: (diagnostic_msgs.msg.DiagnosticStatus.OK, "S5 Signal Triggered"),
                        0x01000000: (diagnostic_msgs.msg.DiagnosticStatus.WARN, "Speed Error Limit"),
                        0x02000000: (diagnostic_msgs.msg.DiagnosticStatus.WARN, "Position Error Limit")}
+    
+        self.mainbattv = 0.0
+        self.logicbattv = 0.0
+        self.temp1c = 0.0
+        self.temp2c = 0.0
+        self.current1a = 0.0
+        self.current2a = 0.0
+        self.mainbatterystate = BatteryState()
 
         rospy.init_node("roboclaw_node")
         rospy.on_shutdown(self.shutdown)
@@ -212,6 +221,16 @@ class Node:
         self.last_set_speed_time = rospy.get_rostime()
 
         rospy.Subscriber("cmd_vel", Twist, self.cmd_vel_callback, queue_size=1)
+
+        self.mainbatterystate_pub = rospy.Publisher('~mainbattery', BatteryState, queue_size=1)
+
+        # setup main battery state
+        self.mainbatterystate.header.frame_id = 'main_battery'
+        self.mainbatterystate.location = 'main battery screw terminal'
+        self.mainbatterystate.power_supply_status = 0 # 2 = DISCHARGING
+        self.mainbatterystate.power_supply_technology = 3 # LIPO
+
+        rospy.Timer(rospy.Duration(1.0), self.publish_batterystate)
 
         rospy.sleep(1)
 
@@ -320,14 +339,40 @@ class Node:
         stat.summary(state, message)
         try:
             with self.mutex:
-                stat.add("Main Batt V:", float(self.roboclaw.ReadMainBatteryVoltage(self.address)[1]) / 10)
-                stat.add("Logic Batt V:", float(self.roboclaw.ReadLogicBatteryVoltage(self.address)[1]) / 10)
-                stat.add("Temp1 C:", float(self.roboclaw.ReadTemp(self.address)[1]) / 10)
-                stat.add("Temp2 C:", float(self.roboclaw.ReadTemp2(self.address)[1]) / 10)
+                self.mainbattv = float(self.roboclaw.ReadMainBatteryVoltage(self.address)[1]) / 10
+                self.logicbattv = float(self.roboclaw.ReadLogicBatteryVoltage(self.address)[1]) / 10
+                self.temp1c = float(self.roboclaw.ReadTemp(self.address)[1]) / 10
+                self.temp2c = float(self.roboclaw.ReadTemp2(self.address)[1]) / 10
+                self.current1a = float(self.roboclaw.ReadCurrents(self.address)[1]) / 100 
+                self.current2a = float(self.roboclaw.ReadCurrents(self.address)[2]) / 100 
+       
+            stat.add("Main Batt V:", self.mainbattv )
+            stat.add("Logic Batt V:", self.logicbattv )
+            stat.add("Temp1 C:", self.temp1c )
+            stat.add("Temp2 C:", self.temp2c )
+            stat.add("Current 1:", self.current1a )
+            stat.add("Current 2:", self.current2a )
+
         except OSError as e:
             rospy.logwarn("Diagnostics OSError: %d", e.errno)
             rospy.logdebug(e)
         return stat
+
+    # TODO: better battery health and state
+    def publish_batterystate(self, event):
+        self.mainbatterystate.header.stamp = rospy.Time.now()
+        self.mainbatterystate.voltage = self.mainbattv
+        if (self.mainbattv>=5):
+            self.mainbatterystate.present = True
+        else:
+            self.mainbatterystate.present = False
+       
+        # if (volts<=11.2):
+        #     self.mainbatterystate.power_supply_health = 3
+        # else:
+        #     self.mainbatterystate.power_supply_health = 1
+
+        self.mainbatterystate_pub.publish(self.mainbatterystate)
 
     # TODO: need clean shutdown so motors stop even if new msgs are arriving
     def shutdown(self):
