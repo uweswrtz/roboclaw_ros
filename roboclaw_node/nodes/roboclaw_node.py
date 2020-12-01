@@ -157,7 +157,7 @@ class Node:
         self.current2a = 0.0
         self.mainbatterystate = BatteryState()
 
-        rospy.init_node("roboclaw_node")
+        rospy.init_node("roboclaw_node", log_level=rospy.DEBUG)
         rospy.on_shutdown(self.shutdown)
         
         dev_name = rospy.get_param("~dev", "/dev/ttyACM0")
@@ -245,6 +245,7 @@ class Node:
     def run(self):
         rospy.loginfo("Starting motor drive")
         r_time = rospy.Rate(10)
+
         while not rospy.is_shutdown():
 
             if (rospy.get_rostime() - self.last_set_speed_time).to_sec() > 1:
