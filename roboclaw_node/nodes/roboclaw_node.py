@@ -157,21 +157,16 @@ class Node:
         self.current2a = 0.0
         self.mainbatterystate = BatteryState()
 
-        #rospy.init_node("roboclaw_node", log_level=rospy.DEBUG)
         rospy.init_node("roboclaw_node")
         rospy.on_shutdown(self.shutdown)
-        
+        rospy.loginfo("Connecting to roboclaw")
         dev_name = rospy.get_param("~dev", "/dev/ttyACM0")
         baud_rate = int(rospy.get_param("~baud", "115200"))
 
         self.address = int(rospy.get_param("~address", "128"))
-        rospy.loginfo("Connecting to RoboClaw with address {} on port {} and {} baud".format( self.address, dev_name, baud_rate))
         if self.address > 0x87 or self.address < 0x80:
             rospy.logfatal("Address out of range")
             rospy.signal_shutdown("Address out of range")
-
-
-        self.encoders = rospy.get_param("~encoders", True)
 
         self.roboclaw = Roboclaw(dev_name, baud_rate)
         # TODO need someway to check if address is correct
@@ -208,7 +203,7 @@ class Node:
         if not version[0]:
             rospy.logwarn("Could not get version from roboclaw")
         else:
-            rospy.loginfo("Version: {}".format(version[1].rstrip()))
+            rospy.logdebug(repr(version[1]))
 
         with self.mutex:
             self.roboclaw.SpeedM1M2(self.address, 0, 0)
@@ -221,7 +216,7 @@ class Node:
         self.encodm = EncoderOdom(self.TICKS_PER_METER, self.BASE_WIDTH)
         self.last_set_speed_time = rospy.get_rostime()
 
-        rospy.Subscriber("cmd_vel", Twist, self.cmd_vel_callback, queue_size=1)
+        rospy.Subscriber("cmd_vel", Twist, self.cmd_vel_callback)
 
         self.mainbatterystate_pub = rospy.Publisher('~mainbattery', BatteryState, queue_size=1)
 
@@ -238,7 +233,6 @@ class Node:
         rospy.logdebug("dev %s", dev_name)
         rospy.logdebug("baud %d", baud_rate)
         rospy.logdebug("address %d", self.address)
-        rospy.logdebug("encoders %s", self.encoders)
         rospy.logdebug("max_speed %f", self.MAX_SPEED)
         rospy.logdebug("ticks_per_meter %f", self.TICKS_PER_METER)
         rospy.logdebug("base_width %f", self.BASE_WIDTH)
@@ -246,12 +240,10 @@ class Node:
     def run(self):
         rospy.loginfo("Starting motor drive")
         r_time = rospy.Rate(10)
-
         while not rospy.is_shutdown():
 
             if (rospy.get_rostime() - self.last_set_speed_time).to_sec() > 1:
-                rospy.logdebug("Did not get command for 1 second, stopping")
-                rospy.logwarn_throttle(1,"Did not get command for 1 second, stopping")
+                rospy.loginfo("Did not get command for 1 second, stopping")
                 try:
                     with self.mutex:
                         self.roboclaw.ForwardM1(self.address, 0)
@@ -312,13 +304,9 @@ class Node:
                 with self.mutex:
                     self.roboclaw.ForwardM1(self.address, 0)
                     self.roboclaw.ForwardM2(self.address, 0)
-            elif self.encoders:
-                with self.mutex:
-                    self.roboclaw.SpeedM1M2(self.address, vr_ticks, vl_ticks)
             else:
                 with self.mutex:
-                    self.roboclaw.DutyM1M2(self.address, vr_ticks, vl_ticks)
-
+                    self.roboclaw.SpeedM1M2(self.address, vr_ticks, vl_ticks)
         except OSError as e:
             rospy.logwarn("SpeedM1M2 OSError: %d", e.errno)
             rospy.logdebug(e)
