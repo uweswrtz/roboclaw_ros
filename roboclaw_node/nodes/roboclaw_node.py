@@ -170,7 +170,7 @@ class Node:
             rospy.signal_shutdown("Address out of range")
 
 
-        self.with_encoder = rospy.get_param("~with_encoder", True)
+        self.encoders = rospy.get_param("~encoders", True)
 
         self.roboclaw = Roboclaw(dev_name, baud_rate)
         # TODO need someway to check if address is correct
@@ -237,7 +237,7 @@ class Node:
         rospy.logdebug("dev %s", dev_name)
         rospy.logdebug("baud %d", baud_rate)
         rospy.logdebug("address %d", self.address)
-        rospy.logdebug("with_encoder %s", self.with_encoder)
+        rospy.logdebug("encoders %s", self.encoders)
         rospy.logdebug("max_speed %f", self.MAX_SPEED)
         rospy.logdebug("ticks_per_meter %f", self.TICKS_PER_METER)
         rospy.logdebug("base_width %f", self.BASE_WIDTH)
@@ -311,14 +311,13 @@ class Node:
                 with self.mutex:
                     self.roboclaw.ForwardM1(self.address, 0)
                     self.roboclaw.ForwardM2(self.address, 0)
-            elif self.with_encoder:
+            elif self.encoders:
                 with self.mutex:
                     self.roboclaw.SpeedM1M2(self.address, vr_ticks, vl_ticks)
             else:
                 with self.mutex:
                     self.roboclaw.DutyM1M2(self.address, vr_ticks, vl_ticks)
-                    #s = self.roboclaw.ReadError(self.address)[1]
-                #rospy.loginfo("0x{:x}".format(s))
+
         except OSError as e:
             rospy.logwarn("SpeedM1M2 OSError: %d", e.errno)
             rospy.logdebug(e)
