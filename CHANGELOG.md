@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added gitignore file with ROS template
 - diagnostics for currents
 - main battery voltage publisher (BatteryState)
+- option to run without encoders
+    - uses duty cycle ( MIXEDDUTY/34 )
+    - parameter TICKS_PER_METER is used as duty cycle factor: velocity * TICKS_PER_METER 
 
 ### Fixed 
 - fixed decimal output of battery and temp diagnostics
