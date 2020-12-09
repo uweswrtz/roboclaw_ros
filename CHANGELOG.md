@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - tested with firmware 4.1.34
 
 ### Added
-- added gitignore file with ROS template
+- CHANGELOG
+- gitignore file with ROS template
 - diagnostics for currents
 - main battery voltage publisher (BatteryState)
 - option to run without encoders
