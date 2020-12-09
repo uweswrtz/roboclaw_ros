@@ -2,10 +2,10 @@
 [![Build Status](https://travis-ci.org/sonyccd/roboclaw_ros.svg?branch=master)](https://travis-ci.org/sonyccd/roboclaw_ros)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/6f65acd1242e4a0582ecb04c7cc70f68)](https://www.codacy.com/app/snakes-in-the-box/roboclaw_ros?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=sonyccd/roboclaw_ros&amp;utm_campaign=Badge_Grade)
 
-This is the ROS driver for the Roboclaw motor controllers made by [Ion Motion Control](http://www.ionmc.com/) and a fork of the original driver form [sonyccd/roboclaw_ros].
+This is the ROS driver for the Roboclaw motor controllers made by [Ion Motion Control](http://www.ionmc.com/) and a fork of the original driver from [sonyccd/roboclaw_ros](https://github.com/sonyccd/roboclaw_ros).
 
 It incoperates different improvements, enhancements and features from other forks:
-* thread safe due to use of mutex [MSDRobotics/roboclaw_ros]
+* thread safe due to the use of mutexes [MSDRobotics/roboclaw_ros](https://github.com/MSDRobotics/roboclaw_ros)
 * diagnostics for currents
 * main battery voltage publisher (BatteryState)
 * option to run without encoders
@@ -42,6 +42,7 @@ Velocity commands for the mobile base.
 ### Published
 /odom [(nav_msgs/Odometry)](http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)  
 Odometry output from the mobile base.
+
 ~mainbattery [(sensor_msgs/BatteryState)](http://docs.ros.org/api/sensor_msgs/html/msg/BatteryState.html)  
 Main battery voltage and some state
 
